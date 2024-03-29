@@ -1,11 +1,26 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-import { Image } from 'cloudinary-react'
-import { ReactComponent as Loading } from '../images/loading.svg'
+import { AdvancedImage } from '@cloudinary/react'
+import { Cloudinary } from '@cloudinary/url-gen'
+import { scale } from '@cloudinary/url-gen/actions/resize';
+
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: process.env.REACT_APP_CLOUD_NAME,
+  },
+});
+
+interface Photo {
+    id: number;
+    url: string;
+    description: string;
+    createdAt: string;
+    updatedAt: string;
+}
 
 function Home() {
-    const [imageSelected, setImageSelected] = useState("")
-    const [listOfPhotos, setListOfPhotos] = useState([])
+    const [imageSelected, setImageSelected] = useState<File | null>(null)
+    const [listOfPhotos, setListOfPhotos] = useState<Array<Photo>>([])
     const [posted, setPosted] = useState({})
     const [disabled, setDisabled] = useState(false)
 
@@ -15,22 +30,35 @@ function Home() {
         })
     }, [posted])
 
-    const uploadImage = () => {
-        if (imageSelected === "" || !imageSelected) {
-            alert("File not selected")
+    const changeFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files.length > 0) {
+            const file = event.target.files[0]
+            setImageSelected(file)
         } else {
-            setDisabled(true)
-            const formData = new FormData()
-            formData.append("file", imageSelected)
-            formData.append("upload_preset", "l8sioozh")
-            axios.post(`${process.env.REACT_APP_CLOUDINARY_URL}/image/upload`, formData).then(async (response) => {
-              const url = response.data.url
-              const photo = { description: "", url: url }
-              await axios.post(`${process.env.REACT_APP_SERVER_URL}/photos`, photo)
-              setPosted(photo)
-              setDisabled(false)
-            })
+            alert("File not selected")
         }
+    }
+
+    const uploadImage = () => {
+      try {
+          if (!imageSelected) {
+              alert("File not selected")
+          } else {
+              setDisabled(true)
+              const formData = new FormData()
+              formData.append("file", imageSelected)
+              formData.append("upload_preset", "l8sioozh")
+              axios.post(`${process.env.REACT_APP_CLOUDINARY_URL}/image/upload`, formData).then(async (response) => {
+                const url = response.data.url
+                const photo = { description: "", url: url }
+                await axios.post(`${process.env.REACT_APP_SERVER_URL}/photos`, photo)
+                setPosted(photo)
+                setDisabled(false)
+              })
+          }
+      } catch (error) {
+          alert("Error occured")
+      }
     }
     
     return (
@@ -38,9 +66,7 @@ function Home() {
         <div className='flex flex-row items-center w-full bg-red-100 py-3'>
           <div className='text-black pl-5 text-2xl font-semibold items-center'> Food Diary </div>
           <div className='flex flex-row items-center justify-end w-5/6 pr-5'>
-            <input type="file" onChange={(event) => {
-              setImageSelected(event.target.files[0])
-            }} />
+            <input type="file" onChange={changeFile} />
             <button className='flex flex-row items-center justify-center bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded' disabled={disabled} onClick={uploadImage}>
                 {disabled
                   ? <svg aria-hidden="true" className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -54,15 +80,13 @@ function Home() {
         <div className='flex flex-col items-center'>
             <h1 className='text-6xl py-5'> Entries: </h1>
           {listOfPhotos.map((value, key) => {
+            const image = cld.image(value.url.split('/').pop());
+            image.resize(scale().width(800));
             return (
-                <div className='my-5 px-10'>
-                    <Image
-                      key={key}
-                      className="w-[800px] mb-5"
-                      cloudName="originalidk"
-                      publicId={value.url} />
-                      <p className='mb-2'> {new Date(value.createdAt).toDateString()} </p>
-                      <p className='w-[800px]'> Description: {value.description} </p>
+                <div key={key} className='my-5 px-10'>
+                  <AdvancedImage cldImg={image} className="mb-5" />
+                  <p className='mb-2'> {new Date(value.createdAt).toDateString()} </p>
+                  <p className='w-[800px]'> Description: {value.description} </p>
                 </div>
             )
           })}
