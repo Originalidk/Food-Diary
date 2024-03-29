@@ -11,8 +11,6 @@ An application that helps you record images and descriptions of food.
 
 1. `git clone <repository-url>` this repository.
 2. Run the command `npm install` in both the server and client directories.
-3. Run the command `sequelize init` in the server directory.
-4. If step 3 does not work, try to run `npm install -g sequelize-cli` before repeating step 3.
 
 ## Running / Development
 1. To run the backend, run the command `npm run dev` inside your server directory.
