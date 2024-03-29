@@ -43,7 +43,7 @@ function Home() {
             }} />
             <button className='flex flex-row items-center justify-center bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded' disabled={disabled} onClick={uploadImage}>
                 {disabled
-                    ? <Loading />
+                    ? <Loading aria-hidden="false" />
                     : <h6>Upload</h6>}
             </button>
           </div>

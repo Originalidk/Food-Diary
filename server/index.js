@@ -16,6 +16,6 @@ app.use("/photos", photosRouter)
 
 db.sequelize.sync().then(() => {
     app.listen(port, () => {
-        console.log("Server running?")
+        console.log("Server running...")
     })
 })

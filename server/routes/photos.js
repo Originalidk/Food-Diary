@@ -25,7 +25,6 @@ const generate_desc = async (url) => {
       ],
     });
     const description = response.choices[0].message.content;
-    console.log(description);
     return description;
   }
 
